@@ -1,0 +1,76 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: docker-registry
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: registry-pv
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/home/registry"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - kube-node1
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: registry-volume
+  namespace: docker-registry
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: registry
+  labels:
+    app: registry
+  namespace: docker-registry
+spec:
+  containers:
+  - name: registry
+    image: registry:2
+    imagePullPolicy: Always
+    ports:
+      - containerPort: 5000
+    volumeMounts:
+      - mountPath: /var/lib/registry
+        name: registry-data
+  volumes:
+    - name: registry-data
+      persistentVolumeClaim:
+        claimName: registry-volume
+  restartPolicy: Always
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: registry
+  namespace: docker-registry
+spec:
+  selector:
+    app: registry
+  ports:
+    - port: 5000
+      targetPort: 5000
