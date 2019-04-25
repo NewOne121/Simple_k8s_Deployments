@@ -1,0 +1,97 @@
+---
+apiVersion: v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    app: hsm-nexus
+  name: hsm-nexus
+  namespace: hsm-ui
+spec:
+  replicas: 1
+  selector:
+    app: hsm-nexus
+    deploymentconfig: hsm-nexus
+  strategy:
+    resources: {}
+    rollingParams:
+      intervalSeconds: 1
+      maxSurge: 25%
+      maxUnavailable: 25%
+      timeoutSeconds: 300
+      updatePeriodSeconds: 1
+    type: Rolling
+  template:
+    metadata:
+      labels:
+        app: hsm-nexus
+        deploymentconfig: hsm-nexus
+    spec:
+      volumes:
+        - name: nexus-data
+          persistentVolumeClaim:
+            claimName: nexus-master-data
+      containers:
+      - image: sonatype/nexus3:3.16.1
+        imagePullPolicy: IfNotPresent
+        name: hsm-nexus
+        ports:
+        - containerPort: 8081
+          protocol: TCP
+        resources: {}
+        volumeMounts:
+        - name: nexus-data
+          mountPath: /nexus-data
+        terminationMessagePath: /dev/termination-log
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+  triggers:
+  - type: ConfigChange
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    volume.beta.kubernetes.io/storage-class: gp2-us-east-1b
+    volume.beta.kubernetes.io/storage-provisioner: kubernetes.io/aws-ebs
+  name: nexus-master-data
+  namespace: hsm-ui
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: 100Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexus-ui
+spec:
+  selector:
+    app: hsm-nexus
+  ports:
+    - name: 8081-tcp
+      port: 8081
+      protocol: TCP
+      targetPort: 8081
+
+---
+apiVersion: v1
+kind: Route
+metadata:
+  annotations:
+  name: nexus
+  namespace: hsm-ui
+spec:
+  port:
+    targetPort: 8081-tcp
+  tls:
+    insecureEdgeTerminationPolicy: Allow
+    termination: edge
+  to:
+    kind: Service
+    name: nexus-ui
+    weight: 100
+  wildcardPolicy: None
