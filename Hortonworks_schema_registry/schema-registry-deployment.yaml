@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hsr-deployment
+spec:
+  selector:
+    matchLabels:
+      app: hsr
+  replicas: 1
+  template:
+    metadata:
+      namespace: default
+      labels:
+        app: hsr
+    spec:
+      containers:
+        - name: hsr
+          image: thebookpeople/hortonworks-registry #https://hub.docker.com/r/thebookpeople/hortonworks-registry
+          ports:
+            - containerPort: 9090
+              name: hsr
+          env:
+            - name: DB_HOST
+              value: "mysql-hcr"
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: hcr-secret
+                  key: hcr-username
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: hcr-secret
+                  key: hcr-database
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hcr-secret
+                  key: hcr-password

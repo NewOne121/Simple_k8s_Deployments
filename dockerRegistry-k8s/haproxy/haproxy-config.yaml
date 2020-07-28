@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: haproxy-config
+  namespace: docker-registry
+  labels:
+    k8s-app: registry-proxy
+data:
+  haproxy.cfg: |-
+    global
+    maxconn 1024
+
+    defaults
+     mode tcp
+     retries 3
+     option redispatch
+     timeout client 3600s
+     timeout server 3600s
+     timeout connect 5s
+
+    frontend forwarder
+     bind *:5000
+     default_backend registry
+
+    backend registry
+     server docker-registry registry.docker-registry.svc.cluster.local:5000

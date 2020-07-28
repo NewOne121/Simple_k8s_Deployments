@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    volume.beta.kubernetes.io/storage-class: gp2-us-east-1b
+    volume.beta.kubernetes.io/storage-provisioner: kubernetes.io/aws-ebs
+  name: nexus-master-data
+  namespace: hsm-ui
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: 100Gi
