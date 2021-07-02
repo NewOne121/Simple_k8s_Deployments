@@ -1,3 +1,33 @@
 /K8S_Deployment_templates.iws
 /K8S_Deployment_templates.iml
 /K8S_Deployment_templates.ipr
+/bin/
+/project/
+*/target/
+*/out/
+
+# gradle #
+/.gradle/
+*/build/
+/build/
+
+# intellij idea
+*.log
+*.iml
+*.ipr
+*.iws
+.idea
+
+# mac
+.DS_Store
+
+# other?
+.history
+.scala_dependencies
+.cache
+.cache-main
+
+#general
+*.class
+/.idea/
+/.shelf/
